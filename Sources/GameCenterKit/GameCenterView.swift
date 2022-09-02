@@ -8,7 +8,7 @@ import GameKit
 public struct GameCenterView: UIViewControllerRepresentable {
     let viewController: GKGameCenterViewController
     
-    init(viewState: GKGameCenterViewControllerState = .default) {
+    public init(viewState: GKGameCenterViewControllerState = .default) {
         self.viewController = GKGameCenterViewController(state: viewState)
     }
     

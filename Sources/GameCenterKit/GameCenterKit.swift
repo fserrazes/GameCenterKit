@@ -146,7 +146,6 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
     
     //MARK: - Achievement methods
     
-    
     /// Reports progress on an achievement, if it has not been completed already.
     /// - Requires: The local user must be authenticated on Game Center.
     /// - Throws: GameCenterError.notAuthenticated: if local player is not authenticated.

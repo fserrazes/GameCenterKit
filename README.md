@@ -6,15 +6,15 @@
 
 This is a Swift package with support for iOS that allows to use GameKit with UIKit and SwiftUI.
 
-Enable players to interact with friends, compare leaderboard ranks, earn achievements.
+Enable players to interact with friends, compare leaderboard ranks and earn achievements.
 
 # Requirements
 
 The latest version of GameKitUI requires:
 
-    * Swift 5+
-    * iOS 14+
-    * Xcode 13+
+    - Swift 5+
+    - iOS 14+
+    - Xcode 13+
 
 # Installation
 
@@ -24,16 +24,17 @@ Using SPM add the following to your dependencies
 
 'GameCenterKit', 'main', 'https://github.com/fserrazes/GameCenterKit.git'
 
-
 # How to use? 
 
 ## Requirements
 
-    1. The local user must be authenticated on Game Center
+    1. The local player must be authenticated on Game Center
     2. Your app need an identifier leaderboard defined in App Store Connect.
 
-## First the local user must be authenticated on Game Center.
+## First the local player must be authenticated on Game Center.
 
+Authenticates the local player with in Game Center if it's possible.
+    
 ```swift
 GameCenterKit.shared.authenticate()
 ```
@@ -93,32 +94,105 @@ struct ContentView_Previews: PreviewProvider {
 }
 ```
 
-## Leaderboard actions
+## Leaderboards actions
+
+```swift
+let identifierId: String = "your-app-leaderboard-id"
+```
 
 ### Retrieve Score
 
+The score earned by the local player (time scope defined is all time).
+
 ```swift
-let identifier: String = "your-app-leaderboard-id"
 let bestScore: Int = 0
 
-if let score = try await GameCenterKit.shared.retrieveScore(identifier: identifier) {
+if let score = try await GameCenterKit.shared.retrieveScore(identifier: identifierId) {
     print("best score: \(String(describing: score))")
     self.bestScore = score
 }
 ```
 
-### Submit Score
+### Retrieve Rank
+
+The rank earned by the local player (time scope defined is all time).
 
 ```swift
-let identifier: String = "your-app-leaderboard-id"
-let score: Int = 10
-
 do {
-    try await GameCenterKit.shared.submitScore(score: score, identifier: identifier)
+    let (current, previous) = try await GameCenterKit.shared.retrieveRank(identifier: identifierId)
+    print("current rank: \(String(describing: current))")
+    print("previous rank: \(String(describing: previous))")
 } catch {
     print(error)
 }
 ```
 
+### Retrieve Best Players
 
+The best players list and the number of total players (time scope defined is all time).
+ 
+ ```swift
+// Number of top players (1 - 50) to use for getting the scores.
+let topPlayers: Int = 10     
 
+do {
+    let (players, totalPlayers) = try await GameCenterKit.shared.retrieveBestPlayers(identifier: identifierId, topPlayers: topPlayers)
+    print("total players: \(String(describing: totalPlayers))")
+    
+    for player in players {
+        print("player: \(player.displayName)\t score: \(player.leaderboard.score)")
+    }
+} catch {
+    print(error)
+}
+```
+
+### Submit Score
+
+Reports a high score eligible for placement on a leaderboard.
+    
+```swift
+// The score earned by the local player
+let score: Int = 10
+
+do {
+    try await GameCenterKit.shared.submitScore(score: score, identifier: identifierId)
+} catch {
+    print(error)
+}
+```
+## Achievements actions
+
+```swift
+let achievementId: String = "your-app-achievement-id"
+```
+
+### Submit Achievement
+
+Reports progress on an achievement, if it has not been completed already.
+
+```swift
+// A percentage value (0 - 100) stating how far the user has progressed on the achievement
+let percent: Double = 10.0
+
+do {
+    try await GameCenterKit.shared.submitAchievement(identifier: achievementId, percent: percent)
+} catch {
+    print(error)
+}
+```
+
+### Reset Achievements
+
+Resets the percentage completed for all of the player’s achievements.
+
+```swift
+do {
+    try await GameCenterKit.shared.resetAchievements()
+} catch {
+    print(error)
+}
+```
+
+## Documentation
++ [Apple Documentation GameKit](https://developer.apple.com/documentation/gamekit/)

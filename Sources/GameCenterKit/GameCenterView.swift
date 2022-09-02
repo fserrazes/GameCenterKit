@@ -9,13 +9,7 @@ public struct GameCenterView: UIViewControllerRepresentable {
     let viewController: GKGameCenterViewController
     
     init(viewState: GKGameCenterViewControllerState = .default) {
-        if #available(iOS 14.0, *) {
-            self.viewController = GKGameCenterViewController(state: viewState)
-        } else {
-            let gameCenterViewController = GKGameCenterViewController()
-            gameCenterViewController.viewState = viewState
-            self.viewController = gameCenterViewController
-        }
+        self.viewController = GKGameCenterViewController(state: viewState)
     }
     
     public func makeCoordinator() -> GameCenterCoordinator {

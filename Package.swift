@@ -7,15 +7,12 @@ let package = Package(
     name: "GameCenterKit",
     platforms: [
         .macOS(.v10_15),
-        .iOS(.v13),
+        .iOS(.v14),
     ],
     products: [
         .library(name: "GameCenterKit", targets: ["GameCenterKit"]),
     ],
     targets: [
-        .target(name: "GameCenterKit", dependencies: []),
-        .testTarget(
-            name: "GameCenterKitTests",
-            dependencies: ["GameCenterKit"]),
+        .target(name: "GameCenterKit", dependencies: [], path: "Sources")
     ]
 )

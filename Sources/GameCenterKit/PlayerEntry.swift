@@ -8,7 +8,7 @@ public struct PlayerEntry: Identifiable {
     public let displayName: String
     public let photo: Image?
     public let leaderboard: Leaderboard
-    
+
     public struct Leaderboard {
         public let rank: Int
         public let score: Int

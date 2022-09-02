@@ -8,17 +8,16 @@ public enum GameCenterError: Error {
 
 public class GameCenterKit: NSObject, GKLocalPlayerListener {
     private (set) var localPlayer = GKLocalPlayer.local
-    
+
     lazy private (set) var isAuthenticated: Bool = {
         return localPlayer.isAuthenticated
     }()
-    
+
     // Create as a Singleton to avoid more than one instance.
     public static var shared: GameCenterKit = GameCenterKit()
     
     private override init() {
         super.init()
-        
     }
     
     /// Authenticates the local player with in Game Center if it's possible.
@@ -31,7 +30,7 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
                 print("\nError on user authentication: \(String(describing: error))\n")
                 return
             }
-            
+
             GKAccessPoint.shared.isActive = false
             
             if self.localPlayer.isAuthenticated {
@@ -40,8 +39,8 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
         }
     }
     
-    //MARK: - Leaderboad methods
-    
+    // MARK: - Leaderboad methods
+
     /// The score earned by the local player (time scope defined is all time).
     /// - Requires: The local user must be authenticated on Game Center.
     /// - Throws: GameCenterError.notAuthenticated: if local player is not authenticated.
@@ -50,18 +49,18 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
     /// - Returns: Player score's, if a previous score was submitted.
     public func retrieveScore(identifier: String) async throws -> Int? {
         guard isAuthenticated else { throw GameCenterError.notAuthenticated }
-        
+
         do {
             let leaderboards: [GKLeaderboard] = try await GKLeaderboard.loadLeaderboards(IDs: [identifier])
             let (entry, _) = try await leaderboards[0].loadEntries(for: [], timeScope: .allTime)
-            
+
             return entry?.score
         } catch {
             print("\nError to retrieve leaderboad \(identifier) score: \(error)\n")
             throw GameCenterError.failure(error)
         }
     }
-    
+
     /// The rank earned by the local player (time scope defined is all time).
     ///
     /// The current and previous rankings are returned to measure the evolution of the player.
@@ -72,10 +71,10 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
     /// - Returns: Current and previous player rank's, if any score was submitted.
     public func retrieveRank(identifier: String) async throws -> (current: Int?, previous: Int?) {
         guard isAuthenticated else { throw GameCenterError.notAuthenticated }
-        
+
         var currentRank: Int? = nil
         var previousRank: Int? = nil
-        
+
         do {
             let leaderboards: [GKLeaderboard] = try await GKLeaderboard.loadLeaderboards(IDs: [identifier])
             if let (currentEntry, _) = try? await leaderboards[0].loadEntries(for: [], timeScope: .allTime) {
@@ -90,7 +89,7 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
         }
         return (currentRank, previousRank)
     }
-    
+
     /// The best players list and the number of total players (time scope defined is all time).
     /// - Requires: The local user must be authenticated on Game Center.
     /// - Throws: GameCenterError.notAuthenticated: if local player is not authenticated.
@@ -101,12 +100,12 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
     /// - Returns: Ordered top player list and the number of total players.
     public func retrieveBestPlayers(identifier: String, topPlayers: Int = 5) async throws -> (player: [PlayerEntry], totalPlayers: Int) {
         guard isAuthenticated else { throw GameCenterError.notAuthenticated }
-        
+
         let maxTopPlayers = topPlayers > 50 ? 50 : topPlayers
         let range = NSRange(1...maxTopPlayers)
-        
+
         var players = [PlayerEntry]()
-        
+
         do {
             let leaderboards: [GKLeaderboard] = try await GKLeaderboard.loadLeaderboards(IDs: [identifier])
             let (_ , entries, totalPlayerCount) = try await leaderboards[0].loadEntries(for: .global, timeScope: .allTime, range: range)
@@ -119,13 +118,13 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
                                       leaderboard: PlayerEntry.Leaderboard(rank: entry.rank, score: entry.score)))
             }
             return (players.sorted(by: { $0.leaderboard.score < $1.leaderboard.score }), totalPlayerCount)
-            
+
         } catch {
             print("\nError to retrieve leaderboad \(identifier) best players: \(error)\n")
             throw GameCenterError.failure(error)
         }
     }
-    
+
     /// Reports a high score eligible for placement on a leaderboard.
     /// - Requires: The local user must be authenticated on Game Center.
     /// - Throws: GameCenterError.notAuthenticated: if local player is not authenticated.
@@ -143,9 +142,9 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
             throw GameCenterError.failure(error)
         }
     }
-    
-    //MARK: - Achievement methods
-    
+
+    // MARK: - Achievement methods
+
     /// Reports progress on an achievement, if it has not been completed already.
     /// - Requires: The local user must be authenticated on Game Center.
     /// - Throws: GameCenterError.notAuthenticated: if local player is not authenticated.
@@ -156,21 +155,21 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
     ///   - banner: Define if achievement banner is shown with the local player progress.
     public func submitAchievement(identifier: String, percent: Double, showsCompletionBanner banner: Bool = true) async throws {
         guard isAuthenticated else { throw GameCenterError.notAuthenticated }
-        
+
         do {
             let achievements = try await GKAchievement.loadAchievements()
-            
+
             // Find an existing achievement, otherwise, create a new achievement.
             // If the achievement isn’t in the array, your game hasn’t reported any progress for this player yet, and the dashboard shows it in the locked state.
             var achievement = achievements.first(where: {$0.identifier ==  identifier})
             if  achievement == nil {
                 achievement = GKAchievement(identifier: identifier)
             }
-            
+
             if let achievement = achievement, !achievement.isCompleted && achievement.percentComplete < percent {
                 achievement.percentComplete = min(percent, 100)
                 achievement.showsCompletionBanner = banner
-                
+
                 // Report the Player’s Progress
                 try await GKAchievement.report([achievement])
             }
@@ -179,7 +178,7 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
             throw GameCenterError.failure(error)
         }
     }
-    
+
     /// Resets the percentage completed for all of the player’s achievements.
     /// - Requires: The local user must be authenticated on Game Center.
     /// - Throws: GameCenterError.notAuthenticated: if local player is not authenticated.
@@ -202,7 +201,7 @@ extension GameCenterKit: GKGameCenterControllerDelegate {
             GKAccessPoint.shared.isActive.toggle()
         }
     }
-    
+
     /// Presents the game center view controller provided by GameKit.
     ///
     /// For SwiftUI projects consider using GameCenterView instead.
@@ -218,7 +217,7 @@ extension GameCenterKit: GKGameCenterControllerDelegate {
         gameCenterViewController.gameCenterDelegate = self
         viewController.present(gameCenterViewController, animated: true)
     }
-        
+
     public func gameCenterViewControllerDidFinish(_ gameCenterViewController: GKGameCenterViewController) {
         gameCenterViewController.dismiss(animated: true)
     }

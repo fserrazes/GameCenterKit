@@ -6,11 +6,11 @@ import SwiftUI
 public struct PlayerEntry: Identifiable {
     public let id: String
     public let displayName: String
-    let photo: Image?
-    let leaderboard: Leaderboard
+    public let photo: Image?
+    public let leaderboard: Leaderboard
     
-    struct Leaderboard {
-        let rank: Int
-        let score: Int
+    public struct Leaderboard {
+        public let rank: Int
+        public let score: Int
     }
 }

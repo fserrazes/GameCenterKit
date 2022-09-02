@@ -1,8 +1,13 @@
 # GameCenterKit
 
-[![Swift 5](https://img.shields.io/badge/language-Swift-orange.svg)](https://swift.org)
-[![macOS](https://img.shields.io/badge/OS-macOS-green.svg)](https://developer.apple.com/macos/)
-[![iOS](https://img.shields.io/badge/OS-iOS-green.svg)](https://developer.apple.com/ios/)
+<p>
+    <img src="https://github.com/fserrazes/GameCenterKit/actions/workflows/CI.yml/badge.svg" />
+    <a href="https://github.com/apple/swift-package-manager">
+      <img src="https://img.shields.io/badge/spm-compatible-brightgreen.svg?style=flat" />
+    </a>
+    <img src="https://img.shields.io/badge/iOS-14.0+-orange.svg" />
+    <img src="https://img.shields.io/badge/License-MIT-blue.svg" />
+</p>
 
 This is a Swift package with support for iOS that allows to use GameKit with UIKit and SwiftUI.
 

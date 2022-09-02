@@ -3,9 +3,9 @@
 
 import SwiftUI
 
-public struct PlayerEntry {
-    let id: String
-    let displayName: String
+public struct PlayerEntry: Identifiable {
+    public let id: String
+    public let displayName: String
     let photo: Image?
     let leaderboard: Leaderboard
     

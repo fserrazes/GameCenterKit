@@ -99,7 +99,7 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
     ///   - identifier: leaderboard id defined in App Store Connect.
     ///   - topPlayers: Specifies the number of top players (1 - 50) to use for getting the scores.
     /// - Returns: Ordered top player list and the number of total players.
-    func retrieveBestPlayers(identifier: String, topPlayers: Int = 5) async throws -> (player: [PlayerEntry], totalPlayers: Int) {
+    public func retrieveBestPlayers(identifier: String, topPlayers: Int = 5) async throws -> (player: [PlayerEntry], totalPlayers: Int) {
         guard isAuthenticated else { throw GameCenterError.notAuthenticated }
         
         let maxTopPlayers = topPlayers > 50 ? 50 : topPlayers

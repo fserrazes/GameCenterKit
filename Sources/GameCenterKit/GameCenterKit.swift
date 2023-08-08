@@ -24,17 +24,24 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
     ///
     /// If viewController is nil, Game Center authenticates the player and the player can start your game.
     /// Otherwise, present the view controller so the player can perform any additional actions to complete authentication.
-    public func authenticate() {
-        localPlayer.authenticateHandler = { [self] (viewController, error) in
-            guard error == nil else {
-                print("\nError on user authentication: \(String(describing: error))\n")
-                return
-            }
-
-            GKAccessPoint.shared.isActive = false
-            
-            if self.localPlayer.isAuthenticated {
-                localPlayer.register(self)
+    /// - Returns: Player autentication status.
+    public func authenticate() async -> Bool {
+        return await withCheckedContinuation { continuation in
+            localPlayer.authenticateHandler = { [self] (viewController, error) in
+                guard error == nil else {
+                    print("\nError on user authentication: \(String(describing: error))\n")
+                    continuation.resume(returning: false)
+                    return
+                }
+                
+                GKAccessPoint.shared.isActive = false
+                
+                if self.localPlayer.isAuthenticated {
+                    localPlayer.register(self)
+                    continuation.resume(returning: true)
+                } else {
+                    continuation.resume(returning: false)
+                }
             }
         }
     }

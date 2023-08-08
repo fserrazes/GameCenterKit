@@ -41,7 +41,16 @@ Using SPM add the following to your dependencies
 Authenticates the local player with in Game Center if it's possible.
     
 ```swift
-GameCenterKit.shared.authenticate()
+do {
+    let isAuthenticated = try await GameCenterKit.shared.authenticate()
+    if isAuthenticated {
+        // Local player is authenticated
+    } else {
+        // Local player is not authenticated
+    }
+} catch {
+    // Handle any errors that might occur during authentication
+}
 ```
 
 ## To presents the Game Center view provided by GameKit there are 3 options:

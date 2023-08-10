@@ -163,7 +163,7 @@ do {
 
 ### Submit Score
 
-Reports a high score eligible for placement on a leaderboard.
+Report a high score eligible for placement on a leaderboard.
     
 ```swift
 // The score earned by the local player

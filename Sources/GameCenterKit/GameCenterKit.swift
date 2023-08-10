@@ -8,10 +8,9 @@ public enum GameCenterError: Error {
 
 public class GameCenterKit: NSObject, GKLocalPlayerListener {
     private (set) var localPlayer = GKLocalPlayer.local
-
-    lazy private (set) var isAuthenticated: Bool = {
+    private var isAuthenticated: Bool {
         return localPlayer.isAuthenticated
-    }()
+    }
 
     // Create as a Singleton to avoid more than one instance.
     public static var shared: GameCenterKit = GameCenterKit()

@@ -1,12 +1,15 @@
 import SwiftUI
 import GameKit
+import OSLog
 
 public enum GameCenterError: Error {
     case notAuthenticated
+    case emptyLeaderboad(String)
     case failure(Error)
 }
 
 public class GameCenterKit: NSObject, GKLocalPlayerListener {
+    private let looger = Logger(subsystem: "com.serrazes.gamecenterkit", category: "GameCenter")
     private (set) var localPlayer = GKLocalPlayer.local
     private var isAuthenticated: Bool {
         return localPlayer.isAuthenticated
@@ -28,7 +31,7 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
         return await withCheckedContinuation { continuation in
             localPlayer.authenticateHandler = { [self] (viewController, error) in
                 guard error == nil else {
-                    print("\nError on user authentication: \(String(describing: error))\n")
+                    looger.error("Error on user authentication: \(error)")
                     continuation.resume(returning: false)
                     return
                 }
@@ -59,13 +62,13 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
         do {
             let leaderboards: [GKLeaderboard] = try await GKLeaderboard.loadLeaderboards(IDs: [identifier])
             if leaderboards.isEmpty {
-                print("\nError to retrieve leaderboad \(identifier) score\n")
-                return nil
+                looger.warning("Leaderboad with \(identifier) is empty")
+                throw GameCenterError.emptyLeaderboad(identifier)
             }
             let (localPlayerEntry, _) = try await leaderboards[0].loadEntries(for: [localPlayer], timeScope: .allTime)
             return localPlayerEntry?.score
         } catch {
-            print("\nError to retrieve leaderboad \(identifier) score: \(error)\n")
+            looger.error("Error to retrieve leaderboad \(identifier) score: \(error)")
             throw GameCenterError.failure(error)
         }
     }
@@ -86,14 +89,18 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
 
         do {
             let leaderboards: [GKLeaderboard] = try await GKLeaderboard.loadLeaderboards(IDs: [identifier])
-            if let (currentEntry, _) = try? await leaderboards[0].loadEntries(for: [], timeScope: .allTime) {
+            if leaderboards.isEmpty {
+                looger.warning("Leaderboad with \(identifier) is empty")
+                throw GameCenterError.emptyLeaderboad(identifier)
+            }
+            if let (currentEntry, _) = try? await leaderboards[0].loadEntries(for: [localPlayer], timeScope: .allTime) {
                 currentRank = currentEntry?.rank
             }
-            if let (previousEntry, _) = try? await leaderboards[0].loadPreviousOccurrence()?.loadEntries(for: [], timeScope: .allTime) {
+            if let (previousEntry, _) = try? await leaderboards[0].loadPreviousOccurrence()?.loadEntries(for: [localPlayer], timeScope: .allTime) {
                 previousRank = previousEntry?.rank
             }
         } catch {
-            print("\nError to retrieve leadeboard \(identifier) rank: \(error)\n")
+            looger.error("Error to retrieve leadeboard \(identifier) rank: \(error)")
             throw GameCenterError.failure(error)
         }
         return (currentRank, previousRank)
@@ -117,6 +124,10 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
 
         do {
             let leaderboards: [GKLeaderboard] = try await GKLeaderboard.loadLeaderboards(IDs: [identifier])
+            if leaderboards.isEmpty {
+                looger.warning("Leaderboad with \(identifier) is empty")
+                throw GameCenterError.emptyLeaderboad(identifier)
+            }
             let (_ , entries, totalPlayerCount) = try await leaderboards[0].loadEntries(for: .global, timeScope: .allTime, range: range)
             entries.forEach { entry in
                 var image: Image?
@@ -129,7 +140,7 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
             return (players.sorted(by: { $0.leaderboard.score < $1.leaderboard.score }), totalPlayerCount)
 
         } catch {
-            print("\nError to retrieve leaderboad \(identifier) best players: \(error)\n")
+            looger.error("Error to retrieve leaderboad \(identifier) best players: \(error)")
             throw GameCenterError.failure(error)
         }
     }
@@ -143,11 +154,11 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
     ///   - identifier: leaderboard id defined in App Store Connect.
     public func submitScore(score: Int, identifier: String) async throws {
         guard isAuthenticated else { throw GameCenterError.notAuthenticated }
-        // TEST: Verificar se é possivel enviar um score maior e logo em seguida um menor
+
         do {
             try await GKLeaderboard.submitScore(score, context: 0, player: localPlayer, leaderboardIDs: [identifier])
         } catch {
-            print("\nError to submit leaderboard \(identifier) scores: \(error)\n")
+            looger.error("Error to submit leaderboard \(identifier) scores: \(error)")
             throw GameCenterError.failure(error)
         }
     }
@@ -183,7 +194,7 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
                 try await GKAchievement.report([achievement])
             }
         } catch {
-            print("\nError to submit achievement \(identifier) progress: \(error)\n")
+            looger.error("Error to submit achievement \(identifier) progress: \(error)")
             throw GameCenterError.failure(error)
         }
     }
@@ -198,7 +209,7 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
         do {
             try await GKAchievement.resetAchievements()
         } catch {
-            print("\nError to reset achievements: \(error)\n")
+            looger.error("Error to reset achievements: \(error)")
             throw GameCenterError.failure(error)
         }
     }

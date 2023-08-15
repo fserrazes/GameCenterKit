@@ -58,9 +58,12 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
 
         do {
             let leaderboards: [GKLeaderboard] = try await GKLeaderboard.loadLeaderboards(IDs: [identifier])
-            let (entry, _) = try await leaderboards[0].loadEntries(for: [], timeScope: .allTime)
-
-            return entry?.score
+            if leaderboards.isEmpty {
+                print("\nError to retrieve leaderboad \(identifier) score\n")
+                return nil
+            }
+            let (localPlayerEntry, _) = try await leaderboards[0].loadEntries(for: [localPlayer], timeScope: .allTime)
+            return localPlayerEntry?.score
         } catch {
             print("\nError to retrieve leaderboad \(identifier) score: \(error)\n")
             throw GameCenterError.failure(error)

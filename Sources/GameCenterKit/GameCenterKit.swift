@@ -11,6 +11,8 @@ public enum GameCenterError: Error {
 public class GameCenterKit: NSObject, GKLocalPlayerListener {
     private let looger = Logger(subsystem: "com.serrazes.gamecenterkit", category: "GameCenter")
     private (set) var localPlayer = GKLocalPlayer.local
+    private var nillableContinuation: [CheckedContinuation<Bool, Never>]?
+    
     private var isAuthenticated: Bool {
         return localPlayer.isAuthenticated
     }
@@ -19,6 +21,7 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
     public static var shared: GameCenterKit = GameCenterKit()
     
     private override init() {
+        self.nillableContinuation = []
         super.init()
     }
     
@@ -28,8 +31,12 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
     /// Otherwise, present the view controller so the player can perform any additional actions to complete authentication.
     /// - Returns: Player autentication status.
     public func authenticate() async -> Bool {
+        guard !isAuthenticated else { return true }
+        
         return await withCheckedContinuation { continuation in
+            nillableContinuation?.append(continuation)
             localPlayer.authenticateHandler = { [self] (viewController, error) in
+                guard nillableContinuation?.count == 1 else { return }
                 guard error == nil else {
                     looger.error("Error on user authentication: \(error)")
                     continuation.resume(returning: false)
@@ -44,6 +51,7 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
                 } else {
                     continuation.resume(returning: false)
                 }
+                nillableContinuation = nil
             }
         }
     }

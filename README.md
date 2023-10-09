@@ -42,7 +42,7 @@ Authenticates the local player with in Game Center if it's possible.
     
 ```swift
 do {
-    let isAuthenticated = try await GameCenterKit.shared.authenticate()
+    GameCenterKit.shared.authenticate { isAuthenticated in
     if isAuthenticated {
         // Local player is authenticated
     } else {

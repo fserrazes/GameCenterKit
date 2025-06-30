@@ -9,7 +9,6 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
       - name: SwiftLint
@@ -17,8 +16,7 @@ jobs:
 
   build:
     runs-on: macos-latest
-
     steps:
     - uses: actions/checkout@v3
     - name: Build
-      run: swift build -Xswiftc "-sdk" -Xswiftc "`xcrun --sdk iphonesimulator --show-sdk-path`" -Xswiftc "-target" -Xswiftc "x86_64-apple-ios14.0-simulator" -v
+      run: xcodebuild clean build -scheme "GameCenterKit" -destination "platform=iOS Simulator,name=iPhone 14,OS=16.0" -sdk iphonesimulator -derivedDataPath .build-ci

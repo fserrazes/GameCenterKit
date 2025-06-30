@@ -10,7 +10,7 @@ public enum GameCenterError: Error {
 
 public class GameCenterKit: NSObject, GKLocalPlayerListener {
     private let looger = Logger(subsystem: "com.serrazes.gamecenterkit", category: "GameCenter")
-    private (set) var localPlayer = GKLocalPlayer.local
+    private(set) var localPlayer = GKLocalPlayer.local
     
     private var isAuthenticated: Bool {
         return localPlayer.isAuthenticated

@@ -128,31 +128,51 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
     /// - Returns: Ordered top player list and the number of total players.
     public func retrieveBestPlayers(identifier: String, topPlayers: Int = 5) async throws -> (player: [PlayerEntry], totalPlayers: Int) {
         guard isAuthenticated else { throw GameCenterError.notAuthenticated }
-
-        let maxTopPlayers = topPlayers > 50 ? 50 : topPlayers
+        
+        let maxTopPlayers = min(topPlayers, 50)
         let range = NSRange(1...maxTopPlayers)
-
-        var players = [PlayerEntry]()
-
+        
         do {
-            let leaderboards: [GKLeaderboard] = try await GKLeaderboard.loadLeaderboards(IDs: [identifier])
-            if leaderboards.isEmpty {
-                logger.warning("Leaderboad with \(identifier) is empty")
+            let leaderboards = try await GKLeaderboard.loadLeaderboards(IDs: [identifier])
+            guard let leaderboard = leaderboards.first else {
+                logger.warning("Leaderboard with \(identifier) is empty")
                 throw GameCenterError.emptyLeaderboad(identifier)
             }
-            let (_ , entries, totalPlayerCount) = try await leaderboards[0].loadEntries(for: .global, timeScope: .allTime, range: range)
-            entries.forEach { entry in
-                var image: Image?
-                entry.player.loadPhoto(for: .small) { photo, error in
-                    image = Image(uiImage: photo ?? UIImage())
+            
+            let (_, entries, totalPlayerCount) = try await leaderboard.loadEntries(
+                for: .global,
+                timeScope: .allTime,
+                range: range
+            )
+            
+            let players: [PlayerEntry] = try await withThrowingTaskGroup(of: PlayerEntry.self) { group in
+                for entry in entries {
+                    group.addTask {
+                        let uiImage = await entry.player.loadPhoto(for: .small) ?? UIImage()
+                        let image = Image(uiImage: uiImage)
+                        return PlayerEntry(
+                            id: entry.player.gamePlayerID,
+                            displayName: entry.player.displayName,
+                            photo: image,
+                            leaderboard: PlayerEntry.Leaderboard(
+                                rank: entry.rank,
+                                score: entry.score
+                            )
+                        )
+                    }
                 }
-                players.append(PlayerEntry(id: entry.player.gamePlayerID, displayName: entry.player.displayName, photo: image,
-                                      leaderboard: PlayerEntry.Leaderboard(rank: entry.rank, score: entry.score)))
+                
+                var result = [PlayerEntry]()
+                for try await player in group {
+                    result.append(player)
+                }
+                return result
             }
+            
             return (players.sorted(by: { $0.leaderboard.score < $1.leaderboard.score }), totalPlayerCount)
-
+            
         } catch {
-            logger.error("Error to retrieve leaderboad \(identifier) best players: \(error)")
+            logger.error("Error to retrieve leaderboard \(identifier) best players: \(error.localizedDescription)")
             throw GameCenterError.failure(error)
         }
     }

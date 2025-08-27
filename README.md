@@ -9,7 +9,7 @@
     <img src="https://img.shields.io/badge/License-MIT-blue.svg" />
 </p>
 
-This is a Swift package with support for iOS that allows to use GameKit with UIKit and SwiftUI.
+A Swift package for iOS that wraps GameKit with support for UIKit and SwiftUI.
 
 Enable players to interact with friends, compare leaderboard ranks and earn achievements.
 
@@ -25,48 +25,56 @@ The latest version of GameKitUI requires:
 
 ## Swift Package Manager
 
-Using SPM add the following to your dependencies
+Add the following to your package dependencies:
 
-'GameCenterKit', 'main', 'https://github.com/fserrazes/GameCenterKit.git'
+```swift
+.package(url: "https://github.com/fserrazes/GameCenterKit.git", branch: "main")
 
-# How to use? 
+```
+
+# Usage
 
 ## Requirements
 
     1. The local player must be authenticated on Game Center
-    2. Your app need an identifier leaderboard defined in App Store Connect.
+    2. Your app must have a leaderboard identifier defined in **App Store Connect**.
 
-## First the local player must be authenticated on Game Center.
+## Authenticate Player
 
-Authenticates the local player with in Game Center if it's possible.
+Authenticates the local player with Game Center (must be done before other actions).
+
+### Completion-based API:
     
 ```swift
-do {
-    GameCenterKit.shared.authenticate { isAuthenticated in
-    if isAuthenticated {
-        // Local player is authenticated
-    } else {
-        // Local player is not authenticated
-    }
-} catch {
-    // Handle any errors that might occur during authentication
+GameCenterKit.shared.authenticate { isAuthenticated in
+if isAuthenticated {
+    // Local player is authenticated
+} else {
+    // Local player is not authenticated
 }
 ```
 
-## To presents the Game Center view provided by GameKit there are 3 options:
+### Async/await API:
+
+```swift
+let state = await GameCenterKit.shared.authenticate()
+```
+
+## Present Game Center UI
+
+There are 3 options:
 
     1. Toggle AccessPointView
-    2. Open from a ViewController (UIKit)
-    3. Open from a View (SwiftUI)
-
+    2. Present from a ViewController (UIKit)
+    3. Present from a View (SwiftUI)
 
 ### Toggle AccessPointView
 
 ```swift
-GameCenterKit.shared.toogleGameAccessPointView()
+GameCenterKit.shared.toggleGameAccessPointView()
 ```
 
-### Open from a ViewController (UIKit)
+### UIKit Example
 
 ```swift
 do {
@@ -76,7 +84,7 @@ do {
 }
 ```
 
-### Open from a View (SwiftUI)
+### SwiftUI Example
 
 ```swift
 import SwiftUI
@@ -87,28 +95,22 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            Button {
+            Button("Open GameCenter View") {
                 isGameCenterOpen = true
-            } label: {
-                Text("Open GameCenter View")
-                    .padding(.all, 5.0)
             }
             .buttonStyle(.borderedProminent)
+            .padding()
         }
         .sheet(isPresented: $isGameCenterOpen) {
             GameCenterView()
         }
     }
 }
-
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
-    }
-}
 ```
 
-## Leaderboards actions
+## Leaderboards
+
+Define your leaderboard identifier:
 
 ```swift
 let identifierId: String = "your-app-leaderboard-id"
@@ -119,11 +121,8 @@ let identifierId: String = "your-app-leaderboard-id"
 The score earned by the local player (time scope defined is all time).
 
 ```swift
-let bestScore: Int = 0
-
 if let score = try await GameCenterKit.shared.retrieveScore(identifier: identifierId) {
     print("best score: \(String(describing: score))")
-    self.bestScore = score
 }
 ```
 
@@ -146,11 +145,13 @@ do {
 The best players list and the number of total players (time scope defined is all time).
  
  ```swift
-// Number of top players (1 - 50) to use for getting the scores.
-let topPlayers: Int = 10     
+let topPlayers = 10  // Number of top players (1–50)  
 
 do {
-    let (players, totalPlayers) = try await GameCenterKit.shared.retrieveBestPlayers(identifier: identifierId, topPlayers: topPlayers)
+    let (players, totalPlayers) = try await GameCenterKit.shared.retrieveBestPlayers(
+        identifier: identifierId, 
+        topPlayers: topPlayers
+    )
     print("total players: \(String(describing: totalPlayers))")
     
     for player in players {
@@ -162,11 +163,8 @@ do {
 ```
 
 ### Submit Score
-
-Report a high score eligible for placement on a leaderboard.
     
 ```swift
-// The score earned by the local player
 let score: Int = 10
 
 do {
@@ -175,7 +173,9 @@ do {
     print(error)
 }
 ```
-## Achievements actions
+## Achievements
+
+Define your achievement identifier:
 
 ```swift
 let achievementId: String = "your-app-achievement-id"
@@ -183,11 +183,8 @@ let achievementId: String = "your-app-achievement-id"
 
 ### Submit Achievement
 
-Reports progress on an achievement, if it has not been completed already.
-
 ```swift
-// A percentage value (0 - 100) stating how far the user has progressed on the achievement
-let percent: Double = 10.0
+let percent = 10.0 // Progress value (0–100)
 
 do {
     try await GameCenterKit.shared.submitAchievement(identifier: achievementId, percent: percent)

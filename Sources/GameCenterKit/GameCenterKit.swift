@@ -47,6 +47,19 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
         }
     }
     
+    /// Authenticates the local player with in Game Center if it's possible.
+    ///
+    /// If viewController is nil, Game Center authenticates the player and the player can start your game.
+    /// Otherwise, present the view controller so the player can perform any additional actions to complete authentication.
+    /// - Returns: Player autentication status.
+    public func authenticate() async -> Bool {
+        await withCheckedContinuation { continuation in
+            authenticate { state in
+                continuation.resume(returning: state)
+            }
+        }
+    }
+    
     // MARK: - Leaderboad methods
 
     /// The score earned by the local player (time scope defined is all time).

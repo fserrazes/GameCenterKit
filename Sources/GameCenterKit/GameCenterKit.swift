@@ -12,7 +12,7 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
     private let logger = Logger(subsystem: "com.serrazes.gamecenterkit", category: "GameCenter")
     private(set) var localPlayer = GKLocalPlayer.local
     
-    private var isAuthenticated: Bool {
+    public var isAuthenticated: Bool {
         return localPlayer.isAuthenticated
     }
 

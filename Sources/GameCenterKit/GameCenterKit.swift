@@ -54,7 +54,11 @@ public class GameCenterKit: NSObject, GKLocalPlayerListener {
     /// - Returns: Player autentication status.
     public func authenticate() async -> Bool {
         await withCheckedContinuation { continuation in
-            authenticate { state in
+            var hasResumed = false
+            
+            self.authenticate { state in
+                guard !hasResumed else { return }
+                hasResumed = true
                 continuation.resume(returning: state)
             }
         }
